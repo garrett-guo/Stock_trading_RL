@@ -129,8 +129,8 @@ class Stock_trading(gym.Env):
         self._take_action(action)
         done = False
 
-        reward = (self.df.loc[self.current_step,'close'] - self.cost_basis)*self.shares_held/ INITIAL_ACCOUNT_BALANCE
-        reward = 1.5*reward if reward <0 else reward
+        reward = (self.df.loc[self.current_step,'close'] - self.cost_basis)*self.shares_held / self.balance
+        reward = -100 if reward <0 else 100*reward
 
         if self.net_wealth <= 0:
             done = True
