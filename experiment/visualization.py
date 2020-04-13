@@ -5,37 +5,26 @@ from datetime import datetime as dt
 
 
 def visualize(df):
-	scale = alt.Scale(
-		domain=(min(min(df['close']), min(df['wealth'])) - 0.2, max(max(df['close']), max(df['wealth'])) + 0.2),
-		clamp=True)
+	line_df = df[['date', 'Net Worth', 'category']]
 
-	close = alt.Chart(df).mark_line(
-		color='red',
-		opacity=0.2
-	).encode(
-		x='date:T',
-		y=alt.Y('close', axis=alt.Axis(format='.4f', title='Net Worth'), scale=scale)
-	).interactive(bind_y=False)
+	nearest = alt.selection(type='single', nearest=True, on='mouseover',
+							fields=['date'], empty='none')
 
+	line = alt.Chart(line_df).mark_line(interpolate='basis').encode(x='date:T', y='Net Worth:Q', color='category:N')
 
-	wealth= alt.Chart(df).mark_line(
-		color='black',
-		opacity=0.2
-	).encode(
-		x='date:T',
-		y=alt.Y('wealth', axis=alt.Axis(format='.4f', title='Net Worth'), scale=scale)
-	).interactive(bind_y=False)
-
-	points = alt.Chart(df).transform_filter(
-		alt.datum.action != 'HOLD'
-	).mark_point(
-		filled=True
-	).encode(
+	action_points = alt.Chart(df).transform_filter(alt.datum.action != 'HOLD').mark_point(filled=True).encode(
 		x=alt.X('date:T', axis=alt.Axis(title='Date')),
-		y=alt.Y('close', axis=alt.Axis(format='.4f', title='Net Worth'), scale=scale),
-		color='action'
-	).interactive(bind_y=False)
+		y=alt.Y('Net Worth', axis=alt.Axis(format='.4f', title='Net Worth')), color='action').interactive(bind_y=False)
 
-	chart = alt.layer(wealth, close, points, title="Portfolio Actions").properties(height=300, width=800)
+	selectors = alt.Chart(line_df).mark_point().encode(x='date:T', opacity=alt.value(0), ).add_selection(nearest)
+
+	points = line.mark_point().encode(opacity=alt.condition(nearest, alt.value(1), alt.value(0)))
+
+	text = line.mark_text(align='left', dx=5, dy=-5).encode(text=alt.condition(nearest, 'Net Worth:Q', alt.value(' ')))
+
+	rules = alt.Chart(line_df).mark_rule(color='gray').encode(x='date:T', ).transform_filter(nearest)
+
+	chart = alt.layer(line, selectors, points, rules, text, action_points, title="Portfolio Actions").properties(
+		height=300, width=800)
 
 	return chart

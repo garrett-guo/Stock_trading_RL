@@ -19,12 +19,13 @@ INITIAL_ACCOUNT_BALANCE = 1000000
 class Stock_trading(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, df, discrete=False):
+    def __init__(self, df, discrete):
         super(Stock_trading, self).__init__()
 
         self.df = df
         self.reward_range = (0, MAX_ACCOUNT_BALANCE)
         self.discrete = discrete
+        # print('self.discrete in env:{}'.format(self.discrete))
 
         if self.discrete:
             self.action_space = spaces.Discrete(3)
